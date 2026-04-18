@@ -1,0 +1,20 @@
+{
+  "end_reason": "quit",
+  "win": false,
+  "final_score": 0.0,
+  "survival_seconds": 1.307,
+  "map_source": "image_5.csv",
+  "map_title": "第6号地图",
+  "map_number": 6,
+  "map_file": "map.json",
+  "record_file": "record.jsonl",
+  "hero_final": [
+    0,
+    20
+  ],
+  "monster1_final": [
+    4,
+    21
+  ],
+  "monster2_final": null
+}

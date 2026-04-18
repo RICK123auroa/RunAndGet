@@ -1,0 +1,16 @@
+{
+  "end_reason": "caught",
+  "win": false,
+  "final_score": 0.0,
+  "survival_seconds": 0.251,
+  "map_source": "image_1.csv",
+  "hero_final": [
+    18,
+    72
+  ],
+  "monster1_final": [
+    18,
+    72
+  ],
+  "monster2_final": null
+}
