@@ -1,0 +1,20 @@
+{
+  "end_reason": "quit",
+  "win": false,
+  "final_score": 3.0,
+  "survival_seconds": 3.337,
+  "map_source": "image_10.csv",
+  "map_title": "第2号地图",
+  "map_number": 2,
+  "map_file": "map.json",
+  "record_file": "record.jsonl",
+  "hero_final": [
+    29,
+    66
+  ],
+  "monster1_final": [
+    35,
+    59
+  ],
+  "monster2_final": null
+}

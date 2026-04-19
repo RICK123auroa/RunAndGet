@@ -1,0 +1,20 @@
+{
+  "end_reason": "caught",
+  "win": false,
+  "final_score": 882.0,
+  "survival_seconds": 99.254,
+  "map_source": "image_4.csv",
+  "map_title": "第5号地图",
+  "map_number": 5,
+  "map_file": "map.json",
+  "record_file": "record.jsonl",
+  "hero_final": [
+    42,
+    31
+  ],
+  "monster1_final": [
+    42,
+    31
+  ],
+  "monster2_final": null
+}
