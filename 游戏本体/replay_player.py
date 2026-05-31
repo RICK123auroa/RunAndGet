@@ -116,8 +116,12 @@ def main() -> int:
     if len(grid) != map_size:
         map_size = len(grid)
 
-    record_file = summary.get("record_file", "record.jsonl")
+    record_file = summary.get("record_file", "record.json")
     record_path = replay_dir / record_file
+    if not record_path.exists() and record_file == "record.json":
+        legacy_path = replay_dir / "record.jsonl"
+        if legacy_path.exists():
+            record_path = legacy_path
     if not record_path.exists():
         print(f"录像缺少逐秒记录文件: {record_path}")
         return 1

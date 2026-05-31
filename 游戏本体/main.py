@@ -304,6 +304,9 @@ class TreasureHideGame:
         self.end_reason = ""
         self.replay_written = False
         self.replay_folder: Path | None = None
+        self.replay_session_folder: Path | None = None
+        self.record_path: Path | None = None
+        self.map_path: Path | None = None
 
     def _spawn_chests(self, excluded: set[Vec2]) -> set[Vec2]:
         count = random.randint(config.CHEST_MIN_COUNT, config.CHEST_MAX_COUNT)
@@ -562,7 +565,37 @@ class TreasureHideGame:
 
         while self.last_recorded_second < whole_seconds:
             self.last_recorded_second += 1
-            self.records.append(self.snapshot(self.last_recorded_second))
+            record = self.snapshot(self.last_recorded_second)
+            self.records.append(record)
+            self.append_record_to_disk(record)
+
+    def ensure_replay_session(self) -> None:
+        if self.replay_session_folder is not None:
+            return
+
+        running_tag = datetime.now().strftime("_running_%Y%m%d_%H%M%S_%f")
+        folder = self.replay_root / running_tag
+        folder.mkdir(parents=True, exist_ok=True)
+
+        map_path = folder / "map.json"
+        record_path = folder / "record.json"
+        map_payload = {
+            "map_size": config.MAP_SIZE,
+            "grid": self.grid,
+        }
+        map_path.write_text(json.dumps(map_payload, ensure_ascii=False), encoding="utf-8")
+        record_path.touch()
+
+        self.replay_session_folder = folder
+        self.map_path = map_path
+        self.record_path = record_path
+
+    def append_record_to_disk(self, record: dict[str, object]) -> None:
+        self.ensure_replay_session()
+        if self.record_path is None:
+            return
+        with self.record_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
     def snapshot(self, second_mark: int) -> dict[str, object]:
         monster2_pos = self.monster2.pos if self.monster2 is not None else None
@@ -603,23 +636,32 @@ class TreasureHideGame:
         self.finished = True
 
         if not self.replay_written:
+            self.ensure_replay_session()
+            if not self.records:
+                fallback_record = self.snapshot(int(self.elapsed_seconds))
+                self.records.append(fallback_record)
+                self.append_record_to_disk(fallback_record)
+
+            session_folder = self.replay_session_folder
+            if session_folder is None:
+                return
+
             end_tag = datetime.now().strftime("%Y%m%d_%H%M%S")
-            folder = self.replay_root / end_tag
-            folder.mkdir(parents=True, exist_ok=True)
+            final_folder = self.replay_root / end_tag
+            if final_folder.exists():
+                suffix = 1
+                while (self.replay_root / f"{end_tag}_{suffix}").exists():
+                    suffix += 1
+                final_folder = self.replay_root / f"{end_tag}_{suffix}"
 
-            map_path = folder / "map.json"
-            record_path = folder / "record.jsonl"
-            summary_path = folder / "summary.json"
+            try:
+                session_folder.rename(final_folder)
+            except OSError:
+                final_folder = session_folder
 
-            map_payload = {
-                "map_size": config.MAP_SIZE,
-                "grid": self.grid,
-            }
-            map_path.write_text(json.dumps(map_payload, ensure_ascii=False), encoding="utf-8")
-
-            with record_path.open("w", encoding="utf-8") as f:
-                for record in self.records:
-                    f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            map_path = final_folder / "map.json"
+            record_path = final_folder / "record.json"
+            summary_path = final_folder / "summary.json"
 
             summary = {
                 "end_reason": self.end_reason,
@@ -637,7 +679,10 @@ class TreasureHideGame:
             }
             summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
-            self.replay_folder = folder
+            self.replay_folder = final_folder
+            self.replay_session_folder = final_folder
+            self.map_path = map_path
+            self.record_path = record_path
             self.replay_written = True
 
     def update(self, dt: float) -> None:
